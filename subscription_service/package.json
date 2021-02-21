@@ -1,0 +1,17 @@
+{
+  "name": "subscription_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "pm2": "pm2 start process.json --no-daemon"
+  },
+  "author": "Paolo E. Galluzzi",
+  "dependencies": {
+    "amqplib": "^0.6.0",
+    "mongoose": "^5.11.17",
+    "pm2": "^4.5.4"
+  }
+}

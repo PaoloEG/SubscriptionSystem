@@ -1,0 +1,86 @@
+version: "3.1"
+services:
+  public_api:
+    build: ./public_apis/customers
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBIT: amqp://rabbitmq:5672
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    command: npm run pm2
+    # volumes:
+    #   - ./public_apis:/public_apis
+
+  admin_api:
+    build: ./public_apis/admins
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - mongo
+    environment:
+      DATABASE_URL: mongodb://mongo:27017/subscriptions
+      RABBIT: amqp://rabbitmq:5672
+      NODE_ENV: production
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    command: npm run pm2
+    # volumes:
+    #   - ./public_apis:/public_apis
+
+  subscription_service:
+    build: ./subscription_service
+    restart: on-failure
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      DATABASE_URL: mongodb://mongo:27017/subscriptions
+      RABBIT: amqp://rabbitmq:5672
+      NODE_ENV: production
+    command: npm run pm2
+    # volumes:
+    #   - ./subscription_service:/subscription_service
+
+  email_service:
+    build: ./email_service
+    restart: on-failure
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      RABBIT: amqp://rabbitmq:5672
+      NODE_ENV: production
+    command: npm run pm2
+    # volumes:
+    #   - ./subscription_service:/subscription_service
+
+  mongo:
+    image: mongo
+    restart: on-failure
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: toor
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    restart: on-failure
+    ports:
+      - 8081:8081
+    # environment:
+    #   ME_CONFIG_MONGODB_ADMINUSERNAME: root
+    #   ME_CONFIG_MONGODB_ADMINPASSWORD: toor
+
+  rabbitmq:
+    image: rabbitmq:management
+    restart: on-failure
+    ports:
+      - 5672:5672
+      - 15672:15672
+    

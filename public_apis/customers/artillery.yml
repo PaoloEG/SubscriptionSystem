@@ -1,0 +1,16 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 100
+scenarios:
+  - flow:
+      - post:
+          url: "/subscriptions"
+          json:
+            email: "brute@test.com"
+            first_name: "paolo"
+            gender: "male"
+            newsletter_id: "piripillo"
+            birthdate: "1991-07-02"
+            privacy_acceptance: true
