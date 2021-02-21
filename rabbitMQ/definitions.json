@@ -1,0 +1,30 @@
+{
+    "users": [
+        {
+            "name": "admin",
+            "password_hash": "iVZ28JWepp9n+qatdNEPBgyxIQCHTukfU59l1pFwy7aAb+Ob",
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "tags": "administrator",
+            "limits": {}
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "admin",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "queues":[
+        {"name":"subscribe","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+        {"name":"unsubscribe","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+        {"name":"sendconfirm","vhost":"/","durable":true,"auto_delete":false,"arguments":{}}
+    ]
+}

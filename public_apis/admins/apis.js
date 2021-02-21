@@ -49,11 +49,9 @@ app.get('/subscriptions', authMiddleware, async (req, res) => {
       const next = queryRes.length < limit ? null : queryRes[queryRes.length - 1]._id;
       return res.status(200).send({ items: queryRes.map(e => { delete e._id; return e; }), next: next });
     } catch (err) {
-      // console.log(`There was an error completing the subscription request: ${JSON.stringify(err)}`);
       return res.status(500).send({ message: 'oops, there was an error' });
     }
   } catch (err) {
-    // console.log(`There was an error in your input: ${err}`);
     return res.status(400).send(err);
   }
 })
@@ -62,7 +60,7 @@ app.get('/subscriptions/:subscription_id', authMiddleware, async (req, res) => {
   try {
     const searchParam = validators.subscriptions.validateSubsDetails(req.params);
     try {
-      const queryRes = await models.subscriber.find(searchParam).lean();
+      const queryRes = await models.subscriber.find(searchParam).select('-__v','-_id').lean();
       return res.status(200).send(queryRes);
     } catch (err) {
       // console.log(`There was an error completing the subscription request: ${JSON.stringify(err)}`);
@@ -75,7 +73,7 @@ app.get('/subscriptions/:subscription_id', authMiddleware, async (req, res) => {
 })
 
 
-mongoose.connect(process.env.DATABASE_URL || 'mongodb://localhost:27017/subscriptions', { useNewUrlParser: true, useUnifiedTopology: true, server: { auto_reconnect: true } }).then(async () => {
+mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true, server: { auto_reconnect: true }}).then(async () => {
   app.listen(port, () =>
     console.log(`Example app listening on port ${port}!`),
   );

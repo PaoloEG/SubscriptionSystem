@@ -1,44 +1,35 @@
 const express = require('express');
 const validators = require('./validators/idx');
 const RabbitMQ = require('./service/RabbitMQ').RabbitClient;
-const rabbit = new RabbitMQ(process.env.RABBIT || 'amqp://localhost:5672');
+const rabbit = new RabbitMQ(process.env.RABBIT);
 const app = express();
-const port = process.env.PORT || 4000
+const port = process.env.PORT || 6000
 app.use(express.json());
 
 app.post('/subscriptions', async (req, res) => {
   try {
-    // console.log(`Hi Paolo, you are in the POST call, with this body: ${JSON.stringify(req.body)}`);
     const subscription = validators.subscriptions.validateSubscription(req.body);
     try {
-      await rabbit.connect();
-      await rabbit.send('subscribe', subscription);
+      await rabbit.send('subscribe', subscription, true);
       return res.status(202).send({ subscription_id: subscription.subscription_id });
     } catch (err) {
-      // console.log(`There was an error completing the subscription request: ${JSON.stringify(err)}`);
-      return res.status(500).send({ message: 'oops, there was an error' });
+      return res.status(503).send({ message: 'sorry, the service is temporarly unavailable' });
     }
   } catch (err) {
-    // console.log(`There was an error in your input: ${err}`);
     return res.status(400).send(err);
   }
 })
 
 app.delete('/subscriptions/:subscription_id', async (req, res) => {
   try {
-    // console.log('Hi Paolo, you are in the DELETE call, with these params: ' + JSON.stringify(req.params));
     validators.subscriptions.validateDeletion(req.params);
-    // console.log('Subscription id to be deleted: ' + req.params.subscription_id);
     try {
-      await rabbit.connect();
-      await rabbit.send('unsubscribe', req.params);
+      await rabbit.send('unsubscribe', req.params, true);
       return res.status(202).send({ message: 'The request will be completed withing 12 hours' });
     } catch (err) {
-      // console.log(`There was an error completing the unsubscription request: ${JSON.stringify(err)}`);
       return res.status(500).send({ message: 'oops, there was an error' });
     }
   } catch (err) {
-    // console.log(`There was an error in your input: ${err}`);
     return res.status(400).send(err);
   }
 })

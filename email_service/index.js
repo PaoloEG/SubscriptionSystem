@@ -1,7 +1,7 @@
 const config = require('./config');
 const RabbitMQ = require('./service/RabbitMQ').RabbitClient;
 const MailService = require('./service/Nodemailer').MailService;
-const rabbit = new RabbitMQ(process.env.RABBIT || 'amqp://localhost');
+const rabbit = new RabbitMQ(process.env.RABBIT);
 const mailClient = new MailService(config.nodemailerConfig);
 
 const sendConfirmation = async (msg) => {
@@ -13,8 +13,7 @@ const sendConfirmation = async (msg) => {
 };
 
 async function app(){
-    await rabbit.connect();
-    await rabbit.createConsumer(config.CONFIRMATION_EMAIL_QUEUE,sendConfirmation);
+    const consumer = rabbit.createConsumer(config.CONFIRMATION_EMAIL_QUEUE,sendConfirmation);
 }
 
 app();
