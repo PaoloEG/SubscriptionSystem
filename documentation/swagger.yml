@@ -1,0 +1,233 @@
+openapi: 3.0.1
+info:
+  title: Subscription System
+  description: This is a sample swagger file containing the APIs for the Subscription
+    System.
+  contact:
+    url: https://github.com/PaoloEG/SubscriptionSystem
+  version: 1.0.0
+servers:
+- url: http://localhost/
+tags:
+- name: Subscriptions
+  description: All the subscriptions APIs
+- name: User
+  description: Login Operation
+paths:
+  /subscriptions:
+    get:
+      tags:
+      - Subscriptions
+      summary: Search among all subscriptions
+      parameters:
+      - name: next
+        in: query
+        description: First next value in the list
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Size of each return array
+        schema:
+          type: integer
+          default: 50
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAllSub'
+        500:
+          description: Server error
+          content: {}
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Subscriptions
+      summary: Create a new subscription
+      requestBody:
+        description: Subscription information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createSub'
+        required: true
+      responses:
+        202:
+          description: subscription_id
+          content: {}
+        400:
+          description: Invalid input
+          content: {}
+        503:
+          description: Service temporarly unavailable
+          content: {}
+  /subscriptions/{subscription_id}:
+    get:
+      tags:
+      - Subscriptions
+      summary: Get details of a subscription
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getSubDetails'
+        400:
+          description: Path input error
+          content: {}
+        500:
+          description: Server error
+          content: {}
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Subscriptions
+      summary: Delete existing subscription
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        202:
+          description: Request queued
+          content: {}
+        400:
+          description: Invalid Input
+          content: {}
+        500:
+          description: Server error
+          content: {}
+  /login:
+    post:
+      tags:
+      - User
+      summary: Admin Login
+      requestBody:
+        description: Login process for admin users
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login'
+        required: true
+      responses:
+        200:
+          description: subscription_id
+          content: 
+            applicaiton/json:
+              schema:
+               $ref: '#/components/schemas/loginRes'
+        400:
+          description: Invalid input
+          content: {}
+
+components:
+  schemas:
+    getAllSub:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                example: test@user.com
+              newsletter_id:
+                type: string
+                example: dssdfsd797
+              subscription_id:
+                type: string
+                example: dfdsf7s97987
+                
+        next:
+          type: string
+          example: null
+    createSub:
+      required:
+      - birthdate
+      - email
+      - newsletter_id
+      - privacy_acceptance
+      type: object
+      properties:
+        email:
+          type: string
+          example: test@user.com
+        first_name:
+          type: string
+          example: TestUser
+        gender:
+          type: string
+          enum:
+          - male
+          - female
+        newsletter_id:
+          type: string
+          example: EYDJKED3837JD
+        birthdate:
+          type: string
+          example: "1999-12-25"
+        privacy_acceptance:
+          type: boolean
+    login:
+      required:
+      - username
+      - password
+      type: object
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          example: admin
+    loginRes:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6WyJyZWFkOnN1YnMiLCJ3cml0ZTpzdWJzIl0sImlhdCI6MTYxMzkzNDE4Nn0.r6tjXSGv7l7aUUxHf3xjz1ivTxNkvFaQjH_ulkAuCu0"
+    getSubDetails:
+      type: array
+      items:
+        type: object
+        properties:
+          email:
+            type: string
+            example: test@user.com
+          first_name:
+            type: string
+            example: TestUser
+          gender:
+            type: string
+            enum:
+            - male
+            - female
+          newsletter_id:
+            type: string
+            example: EYDJKED3837JD
+          birthdate:
+            type: string
+            example: "1999-12-25"
+          privacy_acceptance:
+            type: boolean
+    
+  securitySchemes:
+    bearerAuth:            
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  
