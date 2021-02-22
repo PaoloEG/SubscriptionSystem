@@ -24,7 +24,7 @@ const sendEmail = (msg, queueClient) => {
         subscription_id: message.subscription_id,
         name: message.first_name
     }
-    return queueClient.send(config.CONFIRMATION_EMAIL_QUEUE, emailObj);
+    return queueClient.send(config.CONFIRMATION_EMAIL_QUEUE, emailObj,true);
 }
 
 module.exports.consumeSubscriber = async (msg, queueClient) => {

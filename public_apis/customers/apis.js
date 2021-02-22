@@ -1,7 +1,7 @@
 const express = require('express');
 const validators = require('./validators/idx');
 const RabbitMQ = require('./service/RabbitMQ').RabbitClient;
-const rabbit = new RabbitMQ(process.env.RABBIT);
+const rabbit = new RabbitMQ(process.env.RABBIT || 'amqp://admin:securepassword@localhost:5672');
 const app = express();
 const port = process.env.PORT || 6000
 app.use(express.json());
@@ -16,7 +16,7 @@ app.post('/subscriptions', async (req, res) => {
       return res.status(503).send({ message: 'sorry, the service is temporarly unavailable' });
     }
   } catch (err) {
-    return res.status(400).send(err);
+    return res.status(400).send({ message: err.message });
   }
 })
 
@@ -30,10 +30,18 @@ app.delete('/subscriptions/:subscription_id', async (req, res) => {
       return res.status(500).send({ message: 'oops, there was an error' });
     }
   } catch (err) {
-    return res.status(400).send(err);
+    return res.status(400).send({ message: err.message });
   }
 })
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Public APIs Server run at http://localhost:${port}`);
 });
+
+// close the server and destroy all open connections
+const killserver = async () => {
+  server.close();
+  await rabbit.disconnect();
+};
+
+module.exports = { app, killserver };

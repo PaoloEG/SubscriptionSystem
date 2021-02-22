@@ -25,8 +25,7 @@ app.post('/login', async (req, res) => {
       const accessToken = auth.login(creds.username, creds.password);
       return res.status(200).send({ access_token: accessToken });
     } catch (err) {
-      // console.log(`There was an error completing the subscription request: ${JSON.stringify(err)}`);
-      return res.status(500).send({ message: 'oops, there was an error' });
+      return res.status(400).send({ message: 'wrong email or password' });
     }
   } catch (err) {
     return res.status(400).send(err);
@@ -60,21 +59,27 @@ app.get('/subscriptions/:subscription_id', authMiddleware, async (req, res) => {
   try {
     const searchParam = validators.subscriptions.validateSubsDetails(req.params);
     try {
-      const queryRes = await models.subscriber.find(searchParam).select('-__v','-_id').lean();
+      const queryRes = await models.subscriber.find(searchParam).select(['-__v', '-_id']).lean();
       return res.status(200).send(queryRes);
     } catch (err) {
-      // console.log(`There was an error completing the subscription request: ${JSON.stringify(err)}`);
       return res.status(500).send({ message: 'oops, there was an error' });
     }
   } catch (err) {
-    // console.log(`There was an error in your input: ${err}`);
     return res.status(400).send(err);
   }
 })
 
-
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true, server: { auto_reconnect: true }}).then(async () => {
-  app.listen(port, () =>
+let server;
+mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true, server: { auto_reconnect: true } }).then(async () => {
+  server = app.listen(port, () =>
     console.log(`Example app listening on port ${port}!`),
   );
 });
+
+// close the server and destroy all open connections
+const killserver = async () => {
+  if (server) server.close();
+  await mongoose.disconnect();
+};
+
+module.exports = { app, killserver };

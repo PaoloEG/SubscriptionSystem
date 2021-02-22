@@ -4,7 +4,7 @@ const Joi = require('joi');
 const validate = (schema,input)=>{
     const result = schema.validate(input);
     if(result.error != null){
-        throw new Error(result.error);
+        throw new Error(result.error.message);
     } else {
         return input;
     }
@@ -22,7 +22,7 @@ module.exports.validateSubscription = (input) => {
     const result = validate(schema,input);
     // const hash = crypto.createHash('sha256');
     // hash.update(result.email+result.newsletter_id);
-    // return Object.assign(result,{subscription_id: hash.digest('hex')});
+    // return Object.assign(result,{subscription_id: hash.digest('hex').slice(0,15)});
     return Object.assign(result,{subscription_id: Buffer.from(result.email.slice(4,14)+result.newsletter_id.slice(0,10)).toString('hex')});
 };
 

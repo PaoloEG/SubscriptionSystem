@@ -1,4 +1,5 @@
 const amqp = require('amqplib');
+const EventEmitter = require('events');
 const fs = require('fs');
 
 /**
@@ -29,7 +30,7 @@ module.exports.RabbitClient = class {
         try {
             await this._channel.checkQueue(queue);
         } catch (err) {
-            await this.connect();
+            await this._connect();
             return this._channel.assertQueue(queue, { durable: true, exclusive: false, autoDelete: false });
         }
     }
@@ -80,6 +81,7 @@ module.exports.RabbitClient = class {
             this._confirmChannel.sendToQueue(queue, data, {}, (err, ok) => {
                 if (err) throw err;
             });
+            return this._confirmChannel.waitForConfirms();
         } else {
             return this._channel.sendToQueue(queue, data, {});
         }
@@ -98,12 +100,13 @@ module.exports.RabbitClient = class {
      * Disconnects from all channels and from the broker
     */
     async disconnect() {
-        await this._channel.close();
-        this._channel = null;
-        await this._confirmChannel.close();
-        this._confirmChannel = null;
-        await this._connection.close();
-        this._connection = null;
+        if (this._channel) await this._channel.close();
+        if (this._confirmChannel) await this._confirmChannel.close();
+        if (this._connection){ 
+            this._connection.removeAllListeners();
+            await this._connection.close();
+            this._connection = null;
+        }
     }
 
     //========================== PRIVATE METHODS ==========================//
@@ -119,14 +122,14 @@ module.exports.RabbitClient = class {
         }
     }
 
-    async _connectToBroker(retries = 0) {
+    async _connectToBroker(retries = 1) {
         try {
             this._connection = await amqp.connect(this._url, this._connOpts);
             console.log('RabbitMQ CONNECTED');
         } catch (err) {
-            if (retries < 5) {
-                console.log('error on connecting to RabbitMQ, trying again in 10s. retriesNo: ' + retries);
-                await new Promise(r => setTimeout(r, 10000));
+            if (retries < 6) {
+                console.log(`error on connecting to RabbitMQ, trying again in ${retries*4}s. retriesNo: ${retries}`);
+                await new Promise(r => setTimeout(r, retries*4000));
                 return this._connectToBroker(retries += 1);
             } else {
                 throw new Error('error on connecting to RabbitMQ');
@@ -141,14 +144,14 @@ module.exports.RabbitClient = class {
             if (err.code != 404) {
                 throw new Error('Channel error: ' + err);
             }
+            return this._connect(false);
         })
         this._channel.on('blocked', (reason) => {
             throw new Error('Channel is blocked. Reason: ' + reason);
         })
         this._channel.on('close', () => {
+            this._channel.removeAllListeners();
             this._channel = null;
-            this._connection = null;
-            return this._connect(false);
         })
     }
 
@@ -159,14 +162,14 @@ module.exports.RabbitClient = class {
             if (err.code != 404) {
                 throw new Error('Channel error: ' + err);
             }
+            return this._connect(true);
         })
         this._confirmChannel.on('blocked', (reason) => {
             throw new Error('Channel is blocked. Reason: ' + reason);
         })
         this._confirmChannel.on('close', () => {
+            this._confirmChannel.removeAllListeners();
             this._confirmChannel = null;
-            this._connection = null;
-            return this._connect(true);
         })
     }
 }

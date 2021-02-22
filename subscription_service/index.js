@@ -22,8 +22,8 @@ db.on('reconnected', function () {
 db.once('open', async function () {
     console.log('MongoDB CONNECTED');
     try {
-        const subscribeConsumer = rabbit.createConsumer(config.SUBSCRIBE_QUEUE, subClient.consumeSubscriber);
-        const unsubscribeConsumer = rabbit.createConsumer(config.UNSUBSCRIBE_QUEUE, unsubClient.deleteSubscriber);
+        const subscribeConsumer = await rabbit.createConsumer(config.SUBSCRIBE_QUEUE, subClient.consumeSubscriber);
+        const unsubscribeConsumer = await rabbit.createConsumer(config.UNSUBSCRIBE_QUEUE, unsubClient.deleteSubscriber);
     } catch (err) {
         throw new Error('error connecting to RabbitMQ. Please restart the service.');
     }
